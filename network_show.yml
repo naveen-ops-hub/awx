@@ -1,0 +1,23 @@
+---
+- name: "Get Junos OS configuration in set format."
+  hosts: mytest
+  roles:
+    - Juniper.junos
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: "Get selected configuration hierarchies and save to file"
+      juniper_junos_command:
+        commands:
+          - "show lldp neighbors"
+          - "show interfaces terse"
+          - "show chassis environment"
+          - "show chassis hardware"
+          - "show version"
+          - "show system alarms"
+          - "show chassis alarms"
+          - "show bgp summary"
+          - "show chassis fpc"
+          - "show cli history"
+        dest: "/root/naveen/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        format: text
