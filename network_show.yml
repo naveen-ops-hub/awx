@@ -1,13 +1,14 @@
 ---
-- name: "Get Junos OS configuration in set format."
+- name: "Get Junos OS configuration in set format"
   hosts: mytest
-  roles:
-    - Juniper.junos
-  connection: local
+  connection: netconf
   gather_facts: no
+  collections:
+    - junipernetworks.junos
+
   tasks:
     - name: "Get selected configuration hierarchies and save to file"
-      juniper_junos_command:
+      juniper.junos.junos_command:
         commands:
           - "show lldp neighbors"
           - "show interfaces terse"
