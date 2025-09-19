@@ -1,5 +1,5 @@
 ---
-- name: "Get Junos OS configuration in set format"
+- name: "Get Junos OS information and save to file"
   hosts: mytest
   connection: netconf
   gather_facts: no
@@ -7,14 +7,24 @@
     - junipernetworks.junos
 
   tasks:
-    - name: "Get selected configuration hierarchies and save to file"
-      juniper.junos.junos_command:
+    - name: "Run show version and check to see if output contains Juniper"
+      junipernetworks.junos.junos_command:
+        commands:
+          - "show version"
+        format: text
+      register: version_output
+
+    - name: "Debug version output"
+      debug:
+        var: version_output
+
+    - name: "Run multiple commands and save to file"
+      junipernetworks.junos.junos_command:
         commands:
           - "show lldp neighbors"
           - "show interfaces terse"
           - "show chassis environment"
           - "show chassis hardware"
-          - "show version"
           - "show system alarms"
           - "show chassis alarms"
           - "show bgp summary"
