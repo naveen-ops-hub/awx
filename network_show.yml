@@ -7,23 +7,23 @@
     - junipernetworks.junos
 
   tasks:
-    - name: "Get selected configuration hierarchies and save to file"
-      junipernetworks.junos.junos_command:
+    - name: "Get selected configuration hierarchies and save to variable"
+      junos_command:
         commands:
-          - "show lldp neighbors"
-          - "show interfaces terse"
-          - "show chassis environment"
-          - "show chassis hardware"
-          - "show version"
-          - "show system alarms"
-          - "show chassis alarms"
-          - "show bgp summary"
-          - "show chassis fpc"
-          - "show cli history"
-        display: text
+          - show lldp neighbors
+          - show interfaces terse
+          - show chassis environment
+          - show chassis hardware
+          - show version
+          - show system alarms
+          - show chassis alarms
+          - show bgp summary
+          - show chassis fpc
+          - show cli history
+        format: text
       register: junos_output
 
-    - name: Save output to file
+    - name: "Save output to file"
       copy:
         content: "{{ junos_output.stdout | join('\n\n') }}"
         dest: "/root/naveen/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.txt"
