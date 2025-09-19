@@ -1,37 +1,29 @@
 ---
-- name: Run show commands on Juniper switches and save output
-  hosts: junos_switches          # Replace with your inventory group
+- name: "Get Junos OS configuration in set format."
+  hosts: mytest
   connection: netconf
   gather_facts: no
   collections:
     - junipernetworks.junos
 
-  vars:
-    output_dir: "/tmp/junos_outputs"   # Directory to save outputs on the control node
-    show_commands:
-      - "show interfaces terse"
-      - "show lldp neighbors"
-      - "show version"
-
   tasks:
-
-    - name: Ensure output directory exists
-      ansible.builtin.file:
-        path: "{{ output_dir }}"
-        state: directory
-        mode: '0755'
-
-    - name: Run show commands on Juniper switch
+    - name: "Get selected configuration hierarchies and save to file"
       junipernetworks.junos.junos_command:
-        commands: "{{ show_commands }}"
-      register: show_output
+        commands:
+          - "show lldp neighbors"
+          - "show interfaces terse"
+          - "show chassis environment"
+          - "show chassis hardware"
+          - "show version"
+          - "show system alarms"
+          - "show chassis alarms"
+          - "show bgp summary"
+          - "show chassis fpc"
+          - "show cli history"
+        display: text
+      register: junos_output
 
-    - name: Save command output to a file
-      ansible.builtin.copy:
-        content: |
-          {% for cmd, result in show_output.results|zip(show_commands) %}
-          === Command: {{ cmd }} ===
-          {{ result.stdout[0] }}
-          {% endfor %}
-        dest: "{{ output_dir }}/{{ inventory_hostname }}_show_output.txt"
-        mode: '0644'
+    - name: Save output to file
+      copy:
+        content: "{{ junos_output.stdout | join('\n\n') }}"
+        dest: "/root/naveen/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.txt"
