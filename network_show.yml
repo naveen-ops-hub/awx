@@ -1,13 +1,13 @@
 ---
-- name: "Get Junos OS configuration in set format"
+- name: "Get Junos OS configuration in set format."
   hosts: mytest
+  roles:
+    - Juniper.junos
+  connection: local
   gather_facts: no
-  collections:
-    - juniper.junos
-
   tasks:
     - name: "Get selected configuration hierarchies and save to file"
-      juniper.junos.junos_command:
+      juniper_junos_command:
         commands:
           - "show lldp neighbors"
           - "show interfaces terse"
@@ -19,10 +19,5 @@
           - "show bgp summary"
           - "show chassis fpc"
           - "show cli history"
+        dest: "/root/naveen/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
         format: text
-      register: junos_output
-
-    - name: "Write output to file"
-      copy:
-        content: "{{ junos_output.stdout | join('\n\n') }}"
-        dest: "/tmp/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.txt"
