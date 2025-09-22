@@ -17,10 +17,9 @@
   tasks:
 
     - name: Get Junos committed configuration in SET format
-      junipernetworks.junos.junos_config:
-        backup: yes
-        backup_format: set
-        backup_content: yes
+      junipernetworks.junos.junos_command:
+        commands:
+          - "show configuration | display set"
       register: set_output
 
     - name: Upload SET backup to Swift container
@@ -28,13 +27,12 @@
         state: present
         container: "{{ swift_set_container }}"
         name: "{{ inventory_hostname }}-{{ backup_date }}.set"
-        content: "{{ set_output.backup }}"
+        content: "{{ set_output.stdout[0] }}"
 
     - name: Get Junos committed configuration in JSON format
-      junipernetworks.junos.junos_config:
-        backup: yes
-        backup_format: json
-        backup_content: yes
+      junipernetworks.junos.junos_command:
+        commands:
+          - "show configuration | display json"
       register: json_output
 
     - name: Upload JSON backup to Swift container
@@ -42,4 +40,4 @@
         state: present
         container: "{{ swift_json_container }}"
         name: "{{ inventory_hostname }}-{{ backup_date }}.json"
-        content: "{{ json_output.backup | to_nice_json }}"
+        content: "{{ json_output.stdout[0] | to_nice_json }}"
