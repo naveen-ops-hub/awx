@@ -26,7 +26,7 @@
         backup: true
         backup_options:
           dir_path: "/runner"
-          filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+          filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
         src_format: "json"
 
 - name: "Upload set backup to Swift container"
@@ -50,5 +50,5 @@
         state: present
         container: backup-json
         name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d.json') }}"
-        filename: "/runner/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        filename: "/runner/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
       loop: "{{ groups['mytest'] }}"
