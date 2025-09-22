@@ -21,7 +21,7 @@
         backup_options:
           dir_path: "{{ backup_dir }}"
           filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
-        backup_format: "set"
+        src_format: "set"
 
 - name: "Upload backups to Swift container"
   hosts: localhost
