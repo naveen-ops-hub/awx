@@ -1,5 +1,5 @@
 ---
-- name: "Get Junos OS configuration in set format"
+- name: "Backup Junos configurations in set and JSON formats"
   hosts: mytest
   connection: netconf
   gather_facts: no
@@ -7,23 +7,34 @@
     ansible_python_interpreter: /usr/bin/python3
     ansible_network_os: junos
     ansible_connection: netconf
+    backup_dir: "{{ lookup('env','AWX_PRIVATE_DATA_DIR') }}/backup"
   tasks:
+    - name: "Ensure backup directory exists"
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: 0755
+
     - name: "Backup configuration in set format"
       junipernetworks.junos.junos_config:
         backup: true
         backup_options:
-          dir_path: "/runner"
+          dir_path: "{{ backup_dir }}"
           filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
-        src_format: "set"
+        backup_format: "set"
 
-- name: "Upload set backup to Swift container"
+- name: "Upload backups to Swift container"
   hosts: localhost
   gather_facts: no
+  vars:
+    backup_dir: "{{ lookup('env','AWX_PRIVATE_DATA_DIR') }}/backup"
   tasks:
     - name: "Storing set backup in Swift container"
       os_object:
         state: present
         container: backup-set
         name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
-        filename: "/runner/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        filename: "{{ backup_dir }}/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
       loop: "{{ groups['mytest'] }}"
+
+
