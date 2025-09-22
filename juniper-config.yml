@@ -5,7 +5,10 @@
   connection: netconf
   collections:
     - junipernetworks.junos
-
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_network_os: junos
+    ansible_connection: netconf
   tasks:
     - name: Get committed config in set format
       junipernetworks.junos.junos_command:
