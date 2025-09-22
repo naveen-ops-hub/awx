@@ -31,4 +31,4 @@
     - name: Save output to file
       copy:
         content: "{{ junos_output.stdout | join('\n\n') }}"
-        dest: "/root/naveen/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.txt"
+        dest: "/runner/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.txt"
