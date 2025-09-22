@@ -1,43 +1,38 @@
 ---
-- name: "Get Junos OS configuration and upload to Swift"
+- name: Get Junos OS configuration in json format
   hosts: mytest
-  connection: netconf
-  gather_facts: no
   collections:
     - junipernetworks.junos
-    - openstack.cloud
-
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-    ansible_network_os: junos
-    swift_set_container: "backup-set"
-    swift_json_container: "backup-json"
-    backup_date: "{{ lookup('pipe', 'date +%Y-%m-%d') }}"
-
+  gather_facts: no
+ 
   tasks:
-
-    - name: Get Junos committed configuration in SET format
-      junipernetworks.junos.junos_command:
-        commands:
-          - "show configuration | display set"
-      register: set_output
-
-    - name: Upload SET backup to Swift container
+    - name: Get selected configuration hierarchies and save to file
+      junipernetworks.junos.junos_config:
+        provider:
+          host: "{{ inventory_hostname }}"
+        retrieve: committed
+        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe', 'date +%Y-%m-%d') }}.json"
+        format: json
+      register: config_result
+ 
+- name: Store set data in Swift container
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Storing set data in Swift container
       os_object:
         state: present
-        container: "{{ swift_set_container }}"
-        name: "{{ inventory_hostname }}-{{ backup_date }}.set"
-        content: "{{ set_output.stdout[0] }}"
-
-    - name: Get Junos committed configuration in JSON format
-      junipernetworks.junos.junos_command:
-        commands:
-          - "show configuration | display json"
-      register: json_output
-
-    - name: Upload JSON backup to Swift container
+        container: backup-set
+        filename: "/root/backup/{{ item }}-{{ lookup('pipe', 'date +%Y-%m-%d') }}"
+      loop: "{{ groups['mytest'] }}"
+ 
+- name: Store json data in Swift container
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Storing json data in Swift container
       os_object:
         state: present
-        container: "{{ swift_json_container }}"
-        name: "{{ inventory_hostname }}-{{ backup_date }}.json"
-        content: "{{ json_output.stdout[0] | to_nice_json }}"
+        container: backup-json
+        filename: "/root/backup/{{ item }}-{{ lookup('pipe', 'date +%Y-%m-%d') }}.json"
+      loop: "{{ groups['mytest'] }}"
