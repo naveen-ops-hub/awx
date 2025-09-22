@@ -8,9 +8,14 @@
 
   tasks:
     - name: Get committed config in set format
-      junipernetworks.junos.junos_config:
-        retrieve: committed
-        format: set
+      junipernetworks.junos.junos_command:
+        commands:
+          - show configuration | display set
+      register: set_output
+
+    - name: Save set format to file
+      copy:
+        content: "{{ set_output.stdout[0] }}"
         dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
 
 - name: Get Junos OS configuration in JSON format
@@ -22,9 +27,14 @@
 
   tasks:
     - name: Get committed config in JSON format
-      junipernetworks.junos.junos_config:
-        retrieve: committed
-        format: json
+      junipernetworks.junos.junos_command:
+        commands:
+          - show configuration | display json
+      register: json_output
+
+    - name: Save JSON format to file
+      copy:
+        content: "{{ json_output.stdout[0] }}"
         dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
 
 - name: Upload set format configs to OpenStack Swift
