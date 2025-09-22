@@ -1,0 +1,44 @@
+---
+- name: "Get Junos OS configuration (set format) and upload to Swift"
+  hosts: mytest
+  connection: netconf
+  gather_facts: no
+  collections:
+    - junipernetworks.junos
+    - openstack.cloud
+
+  tasks:
+    - name: "Get selected configuration (set format)"
+      junipernetworks.junos.junos_config:
+        retrieve: committed
+        format: set
+        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+
+    - name: "Upload set file to Swift (object)"
+      openstack.cloud.object:
+        container: backup-set
+        name: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        filename: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        state: present
+
+- name: "Get Junos OS configuration (json) and upload to Swift"
+  hosts: mytest
+  connection: netconf
+  gather_facts: no
+  collections:
+    - junipernetworks.junos
+    - openstack.cloud
+
+  tasks:
+    - name: "Get json config"
+      junipernetworks.junos.junos_config:
+        retrieve: committed
+        format: json
+        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+
+    - name: "Upload json file to Swift"
+      openstack.cloud.object:
+        container: backup-json
+        name: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        filename: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        state: present
