@@ -20,28 +20,28 @@
 
     - name: Get Junos committed configuration in SET format
       junipernetworks.junos.junos_config:
-        retrieve: committed
-        format: set
+        backup: yes
+        backup_options:
+          format: set
       register: set_output
-      check_mode: no
 
     - name: Upload SET backup to Swift container
       os_object:
         state: present
         container: "{{ swift_set_container }}"
         name: "{{ inventory_hostname }}-{{ backup_date }}.set"
-        content: "{{ set_output.stdout | join('\n') }}"
+        content: "{{ set_output.backup }}"
 
     - name: Get Junos committed configuration in JSON format
       junipernetworks.junos.junos_config:
-        retrieve: committed
-        format: json
+        backup: yes
+        backup_options:
+          format: json
       register: json_output
-      check_mode: no
 
     - name: Upload JSON backup to Swift container
       os_object:
         state: present
         container: "{{ swift_json_container }}"
         name: "{{ inventory_hostname }}-{{ backup_date }}.json"
-        content: "{{ json_output.stdout | to_nice_json }}"
+        content: "{{ json_output.backup | to_nice_json }}"
