@@ -6,6 +6,10 @@
   collections:
     - junipernetworks.junos
 
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_network_os: junos
+    ansible_connection: netconf
   tasks:
     - name: "Get selected configuration hierarchies and save to file"
       junipernetworks.junos.junos_command:
@@ -22,6 +26,7 @@
           - "show cli history"
         display: text
       register: junos_output
+      check_mode: no   # disable check mode (avoids "invalid rpc" error)
 
     - name: Save output to file
       copy:
