@@ -1,42 +1,50 @@
 ---
-- name: Get Junos OS configuration in json format
+- name: "Get Junos OS configuration in set format"
   hosts: mytest
-  collections:
-    - junipernetworks.junos
+  connection: netconf
   gather_facts: no
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-    ansible_network_os: junos
-    ansible_connection: netconf
- 
   tasks:
-    - name: Get selected configuration hierarchies and save to file
+    - name: "Backup configuration in set format"
       junipernetworks.junos.junos_config:
-        provider:
-          host: "{{ inventory_hostname }}"
-        retrieve: committed
-        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe', 'date +%Y-%m-%d') }}.json"
-        format: json
-      register: config_result
- 
-- name: Store set data in Swift container
+        backup: true
+        backup_options:
+          dir_path: "/runner"
+          filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        src_format: "set"
+
+- name: "Get Junos OS configuration in json format"
+  hosts: mytest
+  connection: netconf
+  gather_facts: no
+  tasks:
+    - name: "Backup configuration in JSON format"
+      junipernetworks.junos.junos_config:
+        backup: true
+        backup_options:
+          dir_path: "/runner"
+          filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        src_format: "json"
+
+- name: "Upload set backup to Swift container"
   hosts: localhost
   gather_facts: no
   tasks:
-    - name: Storing set data in Swift container
+    - name: "Storing set backup in Swift container"
       os_object:
         state: present
         container: backup-set
-        filename: "/root/backup/{{ item }}-{{ lookup('pipe', 'date +%Y-%m-%d') }}"
+        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        filename: "/runner/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
       loop: "{{ groups['mytest'] }}"
- 
-- name: Store json data in Swift container
+
+- name: "Upload JSON backup to Swift container"
   hosts: localhost
   gather_facts: no
   tasks:
-    - name: Storing json data in Swift container
+    - name: "Storing JSON backup in Swift container"
       os_object:
         state: present
         container: backup-json
-        filename: "/root/backup/{{ item }}-{{ lookup('pipe', 'date +%Y-%m-%d') }}.json"
+        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d.json') }}"
+        filename: "/runner/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
       loop: "{{ groups['mytest'] }}"
