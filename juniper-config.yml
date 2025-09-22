@@ -1,44 +1,58 @@
 ---
-- name: "Get Junos OS configuration (set format) and upload to Swift"
+- name: Get Junos OS configuration in set format
   hosts: mytest
-  connection: netconf
   gather_facts: no
+  connection: netconf
   collections:
     - junipernetworks.junos
-    - openstack.cloud
 
   tasks:
-    - name: "Get selected configuration (set format)"
+    - name: Get committed config in set format
       junipernetworks.junos.junos_config:
         retrieve: committed
         format: set
-        dest: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}"
+        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
 
-    - name: "Upload set file to Swift"
-      openstack.cloud.object:
-        container: backup-set
-        name: "{{ inventory_hostname }}-{{ ansible_date_time.date }}"
-        filename: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}"
-        state: present
-
-- name: "Get Junos OS configuration (json) and upload to Swift"
+- name: Get Junos OS configuration in JSON format
   hosts: mytest
-  connection: netconf
   gather_facts: no
+  connection: netconf
   collections:
     - junipernetworks.junos
-    - openstack.cloud
 
   tasks:
-    - name: "Get json config"
+    - name: Get committed config in JSON format
       junipernetworks.junos.junos_config:
         retrieve: committed
         format: json
-        dest: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}.json"
+        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
 
-    - name: "Upload json file to Swift"
+- name: Upload set format configs to OpenStack Swift
+  hosts: localhost
+  gather_facts: no
+  collections:
+    - openstack.cloud
+
+  tasks:
+    - name: Upload set format config
       openstack.cloud.object:
-        container: backup-json
-        name: "{{ inventory_hostname }}-{{ ansible_date_time.date }}.json"
-        filename: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}.json"
         state: present
+        container: backup-set
+        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
+        filename: "/root/backup/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
+      loop: "{{ groups['mytest'] }}"
+
+- name: Upload JSON format configs to OpenStack Swift
+  hosts: localhost
+  gather_facts: no
+  collections:
+    - openstack.cloud
+
+  tasks:
+    - name: Upload JSON format config
+      openstack.cloud.object:
+        state: present
+        container: backup-json
+        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        filename: "/root/backup/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+      loop: "{{ groups['mytest'] }}"
