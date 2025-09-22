@@ -12,13 +12,13 @@
       junipernetworks.junos.junos_config:
         retrieve: committed
         format: set
-        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        dest: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}"
 
-    - name: "Upload set file to Swift (object)"
+    - name: "Upload set file to Swift"
       openstack.cloud.object:
         container: backup-set
-        name: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
-        filename: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        name: "{{ inventory_hostname }}-{{ ansible_date_time.date }}"
+        filename: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}"
         state: present
 
 - name: "Get Junos OS configuration (json) and upload to Swift"
@@ -34,11 +34,11 @@
       junipernetworks.junos.junos_config:
         retrieve: committed
         format: json
-        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        dest: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}.json"
 
     - name: "Upload json file to Swift"
       openstack.cloud.object:
         container: backup-json
-        name: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
-        filename: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        name: "{{ inventory_hostname }}-{{ ansible_date_time.date }}.json"
+        filename: "/tmp/{{ inventory_hostname }}-{{ ansible_date_time.date }}.json"
         state: present
