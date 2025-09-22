@@ -19,7 +19,7 @@
     - name: Save set format to file
       copy:
         content: "{{ set_output.stdout[0] }}"
-        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
+        dest: "/runner/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
 
 - name: Get Junos OS configuration in JSON format
   hosts: mytest
@@ -38,7 +38,7 @@
     - name: Save JSON format to file
       copy:
         content: "{{ json_output.stdout[0] }}"
-        dest: "/root/backup/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        dest: "/runner/{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
 
 - name: Upload set format configs to OpenStack Swift
   hosts: localhost
@@ -52,7 +52,7 @@
         state: present
         container: backup-set
         name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
-        filename: "/root/backup/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
+        filename: "/runner/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.set"
       loop: "{{ groups['mytest'] }}"
 
 - name: Upload JSON format configs to OpenStack Swift
@@ -67,5 +67,5 @@
         state: present
         container: backup-json
         name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
-        filename: "/root/backup/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
+        filename: "/runner/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
       loop: "{{ groups['mytest'] }}"
