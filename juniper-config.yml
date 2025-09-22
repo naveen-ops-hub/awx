@@ -10,8 +10,6 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
     ansible_network_os: junos
-    ansible_user: "{{ lookup('env', 'JUNOS_USER') | default('L1-User') }}"
-    ansible_password: "{{ lookup('env', 'JUNOS_PASS') | default('L1!0gin#123') }}"
     swift_set_container: "backup-set"
     swift_json_container: "backup-json"
     backup_date: "{{ lookup('pipe', 'date +%Y-%m-%d') }}"
