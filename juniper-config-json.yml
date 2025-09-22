@@ -32,7 +32,7 @@
     - name: "Storing JSON backup in Swift container"
       os_object:
         state: present
-        container: backup-set-data
-        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        container: backup-json-data
+        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d.json') }}"
         filename: "{{ backup_dir }}/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}.json"
       loop: "{{ groups['mytest'] }}"
