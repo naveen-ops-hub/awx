@@ -1,5 +1,5 @@
 ---
-- name: "Get Junos OS configuration in set and JSON formats"
+- name: "Get Junos OS configuration and upload to Swift"
   hosts: mytest
   connection: netconf
   gather_facts: no
@@ -10,18 +10,13 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
     ansible_network_os: junos
-    backup_dir: "/runner"
+    ansible_user: "{{ lookup('env', 'JUNOS_USER') | default('L1-User') }}"
+    ansible_password: "{{ lookup('env', 'JUNOS_PASS') | default('L1!0gin#123') }}"
     swift_set_container: "backup-set"
     swift_json_container: "backup-json"
     backup_date: "{{ lookup('pipe', 'date +%Y-%m-%d') }}"
 
   tasks:
-
-    - name: Ensure backup directory exists
-      file:
-        path: "{{ backup_dir }}"
-        state: directory
-        mode: '0755'
 
     - name: Get Junos committed configuration in SET format
       junipernetworks.junos.junos_config:
@@ -30,10 +25,12 @@
       register: set_output
       check_mode: no
 
-    - name: Save SET output locally
-      copy:
+    - name: Upload SET backup to Swift container
+      os_object:
+        state: present
+        container: "{{ swift_set_container }}"
+        name: "{{ inventory_hostname }}-{{ backup_date }}.set"
         content: "{{ set_output.stdout | join('\n') }}"
-        dest: "{{ backup_dir }}/{{ inventory_hostname }}-{{ backup_date }}.set"
 
     - name: Get Junos committed configuration in JSON format
       junipernetworks.junos.junos_config:
@@ -42,21 +39,9 @@
       register: json_output
       check_mode: no
 
-    - name: Save JSON output locally
-      copy:
-        content: "{{ json_output.stdout | to_nice_json }}"
-        dest: "{{ backup_dir }}/{{ inventory_hostname }}-{{ backup_date }}.json"
-
-    - name: Upload SET backups to Swift container
-      os_object:
-        state: present
-        container: "{{ swift_set_container }}"
-        name: "{{ inventory_hostname }}-{{ backup_date }}.set"
-        filename: "{{ backup_dir }}/{{ inventory_hostname }}-{{ backup_date }}.set"
-
-    - name: Upload JSON backups to Swift container
+    - name: Upload JSON backup to Swift container
       os_object:
         state: present
         container: "{{ swift_json_container }}"
         name: "{{ inventory_hostname }}-{{ backup_date }}.json"
-        filename: "{{ backup_dir }}/{{ inventory_hostname }}-{{ backup_date }}.json"
+        content: "{{ json_output.stdout | to_nice_json }}"
