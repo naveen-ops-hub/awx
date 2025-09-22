@@ -20,7 +20,7 @@
         backup: true
         backup_options:
           dir_path: "{{ backup_dir }}"
-          filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+          filename: "{{ inventory_hostname }}-{{ ansible_date_time.date }}.json"
         src_format: "json"
 
 - name: "Upload backups to Swift container"
@@ -33,6 +33,6 @@
       os_object:
         state: present
         container: backup-json-data
-        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
-        filename: "{{ backup_dir }}/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        name: "{{ item }}-{{ ansible_date_time.date }}.json"
+        filename: "{{ backup_dir }}/{{ item }}-{{ ansible_date_time.date }}.json"
       loop: "{{ groups['mytest'] }}"
