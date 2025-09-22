@@ -4,6 +4,10 @@
   collections:
     - junipernetworks.junos
   gather_facts: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_network_os: junos
+    ansible_connection: netconf
  
   tasks:
     - name: Get selected configuration hierarchies and save to file
