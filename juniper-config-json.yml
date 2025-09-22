@@ -1,0 +1,38 @@
+---
+- name: "Backup Junos configurations in JSON formats"
+  hosts: mytest
+  connection: netconf
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_network_os: junos
+    ansible_connection: netconf
+    backup_dir: "{{ lookup('env','AWX_PRIVATE_DATA_DIR') }}/backup"
+  tasks:
+    - name: "Ensure backup directory exists"
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: 0755
+
+    - name: "Backup configuration in JSON format"
+      junipernetworks.junos.junos_config:
+        backup: true
+        backup_options:
+          dir_path: "{{ backup_dir }}"
+          filename: "{{ inventory_hostname }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        src_format: "json"
+
+- name: "Upload backups to Swift container"
+  hosts: localhost
+  gather_facts: no
+  vars:
+    backup_dir: "{{ lookup('env','AWX_PRIVATE_DATA_DIR') }}/backup"
+  tasks:
+    - name: "Storing JSON backup in Swift container"
+      os_object:
+        state: present
+        container: backup-json-data
+        name: "{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+        filename: "{{ backup_dir }}/{{ item }}-{{ lookup('pipe','date +%Y-%m-%d') }}"
+      loop: "{{ groups['mytest'] }}"
